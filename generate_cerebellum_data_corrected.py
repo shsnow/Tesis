@@ -8,7 +8,7 @@ prefs.codegen.target = 'numpy'
 start_scope()
 os.makedirs("cerebellar_datasets", exist_ok=True)
 
-duration = 2000*ms
+duration = 3000*ms
 sample_interval = 1*ms
 num_neurons = 1000
 
@@ -97,7 +97,7 @@ alpha_n = (0.01*(10*mV - v)/mV)/(exp((10*mV - v)/(10*mV)) - 1)/ms : Hz
 beta_n = 0.125*exp(-v/(80*mV))/ms : Hz
 '''
 purkinje = NeuronGroup(num_neurons, purkinje_eqs, threshold='v > -40*mV',
-                       reset='v = -65*mV', method='exponential_euler',
+                       reset='v = -65*mV', method='rk4',
                        namespace={
                            'Cm': 1*uF/cm**2, 'gNa': 120*msiemens/cm**2,
                            'gK': 36*msiemens/cm**2, 'gL': 0.3*msiemens/cm**2,
@@ -107,7 +107,10 @@ purkinje.v = -65*mV
 purkinje.m = 0.05
 purkinje.h = 0.6
 purkinje.n = 0.32
-purkinje.I = '(10 + 3*sin(2*pi*3*Hz*t)) * uA/cm**2'
+#purkinje.I = 10 * uA / cm**2  # Valor inicial para evitar warnings
+purkinje.I = 20 * uA / cm**2
+
+purkinje.run_regularly('I = (10 + 3*sin(2*pi*3*Hz*t)) * uA/cm**2', dt=defaultclock.dt)
 purkinje_mon = SpikeMonitor(purkinje)
 
 # Nuclei (AdEx)

@@ -1,0 +1,5 @@
+neuron_id,spike_time_ms
+"<spikemonitor.i: array([41, 37, 67, 25], dtype=int32)>",102.7
+"<spikemonitor.i: array([41, 37, 67, 25], dtype=int32)>",130.29999999999998
+"<spikemonitor.i: array([41, 37, 67, 25], dtype=int32)>",361.4
+"<spikemonitor.i: array([41, 37, 67, 25], dtype=int32)>",363.7

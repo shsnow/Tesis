@@ -56,19 +56,40 @@ def simular_granulosas(n_neuronas=100, duracion=500*ms, guardar=True):
     spikes = SpikeMonitor(G)
 
     run(duracion)
-
+    print(f"SpikeMonitor registró {spikes.num_spikes} spikes totales.")
+    print(f"Neuronas que dispararon: {np.unique(spikes.i)}")
     if guardar:
         t_array = mon_v.t / ms
-        v_array = mon_v.v[0] / mV
-        I_array = mon_v.I[0] / nA
-        spike_times = spikes.spike_trains()[0] / ms
-        spike_binary = np.isin(t_array, spike_times).astype(int)
+        #v_array = mon_v.v[0] / mV
+        #I_array = mon_v.I[0] / nA
+        # Spike vector alineado con el tiempo del StateMonitor
+        
+        if len(spikes.i) == 0:
+            print("❌ Ninguna neurona disparó.")
+            return
+
+        primera = int(spikes.i[0])
+        print(f"✅ Usando neurona {primera} que sí disparó")
+
+        v_array = mon_v.v[primera] / mV
+        I_array = mon_v.I[primera] / nA
+
+        # Reconstruir spike array
+        spike_times = spikes.spike_trains()[primera] / ms
+        spike_array = np.zeros_like(t_array)
+
+        # Usamos np.isclose para marcar spikes con tolerancia a error numérico
+        tolerance = float(defaultclock.dt / ms) / 2  # 0.05 ms si dt=0.1ms
+        for spike_time in spike_times:
+            matches = np.isclose(t_array, spike_time, atol=tolerance)
+            spike_array[matches] = 1
+
 
         df = pd.DataFrame({
             'time_ms': t_array,
             'voltage_mV': v_array,
             'input_current_nA': I_array,
-            'spike': spike_binary
+            'spike': spike_array
         })
 
         df.to_csv("granule_kan_ready.csv", index=False)

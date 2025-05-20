@@ -135,6 +135,69 @@ def simular_poisson(nombre, rate=50*Hz, duracion=500*ms):
     df.to_csv(f"dataset/{nombre}_kan_ready.csv", index=False)
     print(f"✅ {nombre} guardado en {nombre}_kan_ready.csv")
 
+
+def simular_fibra(nombre="mossy", rate=40*Hz, n_neuronas=100, duracion=500*ms):
+    start_scope()
+    defaultclock.dt = 0.1*ms
+
+    eqs = '''
+    dv/dt = (-g_L*(v - EL) + I)/C : volt
+    dI/dt = (-I + I0)/tau_syn + (sigma*xi)/sqrt(tau_syn) : amp
+    g_L : siemens (shared)
+    C : farad (shared)
+    EL : volt (shared)
+    I0 : amp (shared)
+    sigma : amp (shared)
+    tau_syn : second (shared)
+    V_reset : volt (shared)
+    V_spike : volt (shared)
+    '''
+
+    G = NeuronGroup(n_neuronas, eqs,
+                    threshold='v > V_spike',
+                    reset='v = V_reset',
+                    method='euler')
+
+    G.g_L = 30*nS
+    G.C = 200*pF
+    G.EL = -70*mV
+    G.I0 = 0.8*nA if nombre == "mossy" else 0.5*nA
+    G.sigma = 0.2*nA
+    G.tau_syn = 5*ms
+    G.V_reset = -65*mV
+    G.V_spike = -40*mV
+    G.v = G.EL
+    G.I = 0*nA
+
+    mon = StateMonitor(G, ['v', 'I'], record=True)
+    spikes = SpikeMonitor(G)
+    run(duracion)
+
+    t_array = mon.t / ms
+    if len(spikes.i) == 0:
+        print(f"❌ Ninguna neurona disparó en {nombre}.")
+        return
+
+    idx = int(spikes.i[0])
+    v_array = mon.v[idx] / mV
+    I_array = mon.I[idx] / nA
+    spike_array = np.zeros_like(t_array)
+    for st in spikes.spike_trains()[idx]/ms:
+        spike_array[np.isclose(t_array, st, atol=0.05)] = 1
+
+    df = pd.DataFrame({
+        'time_ms': t_array,
+        'voltage_mV': v_array,
+        'input_current_nA': I_array,
+        'spike': spike_array
+    })
+    df.to_csv(f"{nombre}_kan_ready.csv", index=False)
+    print(f"✅ {nombre} guardado en {nombre}_kan_ready.csv")
+
+
+
+
+
 def simular_todas():
     # Granulosa (AdEx)
     simular_adex("granule", {
@@ -178,10 +241,10 @@ def simular_todas():
 
 
     # Fibras musgosas (Poisson)
-    simular_poisson("mossy", rate=40*Hz)
+    simular_fibra("mossy", rate=40*Hz)
 
     # Fibras trepadoras (Poisson)
-    simular_poisson("climbing", rate=1*Hz)
+    simular_fibra("climbing", rate=1*Hz)
 
     # Purkinje (HH)
     simular_purkinje()

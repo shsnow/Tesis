@@ -29,7 +29,7 @@ def guardar_csv(mon, spikes, nombre, duracion):
     df.to_csv(f"dataset/{nombre}_kan_ready.csv", index=False)
     print(f"✅ dataset/{nombre} guardado en {nombre}_kan_ready.csv")
 
-def simular_adex(nombre, parametros, n_neuronas=100, duracion=500*ms):
+def simular_adex(nombre, parametros, n_neuronas=100, duracion=1000*ms):
     start_scope()
     defaultclock.dt = 0.1*ms
 
@@ -63,7 +63,7 @@ def simular_adex(nombre, parametros, n_neuronas=100, duracion=500*ms):
     guardar_csv(mon, spikes, nombre, duracion)
 
 
-def simular_purkinje(n_neuronas=100, duracion=500*ms):
+def simular_purkinje(n_neuronas=300, duracion=2000*ms):
     start_scope()
     defaultclock.dt = 0.01*ms
 
@@ -92,7 +92,7 @@ def simular_purkinje(n_neuronas=100, duracion=500*ms):
                     })
 
     G.v = -65*mV; G.m = 0.05; G.h = 0.6; G.n = 0.32
-    G.I_ext = 10*uA/cm**2
+    G.I_ext = 30*uA/cm**2
 
     mon = StateMonitor(G, variables=['v', 'I_ext'], record=True)
     spikes = SpikeMonitor(G)
@@ -117,7 +117,7 @@ def simular_purkinje(n_neuronas=100, duracion=500*ms):
     print("✅ Purkinje guardado en dataset/purkinje_kan_ready.csv")
 
 
-def simular_poisson(nombre, rate=50*Hz, duracion=500*ms):
+def simular_poisson(nombre, rate=50*Hz, duracion=1000*ms):
     start_scope()
     G = PoissonGroup(100, rates=rate)
     spikes = SpikeMonitor(G)
@@ -137,7 +137,7 @@ def simular_poisson(nombre, rate=50*Hz, duracion=500*ms):
     print(f"✅ {nombre} guardado en {nombre}_kan_ready.csv")
 
 
-def simular_fibra(nombre="mossy", rate=40*Hz, n_neuronas=100, duracion=500*ms):
+def simular_fibra(nombre="mossy", rate=40*Hz, n_neuronas=100, duracion=1000*ms):
     start_scope()
     defaultclock.dt = 0.1*ms
 
@@ -162,7 +162,7 @@ def simular_fibra(nombre="mossy", rate=40*Hz, n_neuronas=100, duracion=500*ms):
     G.g_L = 30*nS
     G.C = 200*pF
     G.EL = -70*mV
-    G.I0 = 0.8*nA if nombre == "mossy" else 0.5*nA
+    G.I0 = 1.4*nA if nombre == "mossy" else 0.5*nA
     G.sigma = 0.2*nA
     G.tau_syn = 5*ms
     G.V_reset = -65*mV
@@ -253,5 +253,5 @@ def simular_todas():
 
 
 # Ejecutar todas
-#simular_todas()
-simular_purkinje()
+simular_todas()
+#simular_purkinje()

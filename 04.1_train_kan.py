@@ -5,6 +5,7 @@ import torch
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, roc_curve
+from sklearn.utils import resample
 from kan import KAN
 
 # === CONFIGURACIÓN ===
@@ -20,21 +21,27 @@ def load_npz(path):
     X, y = data['X'], data['y']
     return X, y
 
-def balance_dataset(X, y):
-    y = y.flatten()  # Asegura que y sea 1D
-    X_pos = X[y == 1]
-    X_neg = X[y == 0]
 
-    n_samples = min(len(X_pos), len(X_neg))
-    if n_samples == 0:
+def balance_dataset(X, y):
+    y = y.flatten()
+    X_pos = X[y == 1]
+    y_pos = y[y == 1]
+    X_neg = X[y == 0]
+    y_neg = y[y == 0]
+
+    if len(X_pos) == 0 or len(X_neg) == 0:
         print("❌ Error: No hay suficientes muestras de ambas clases para balancear.")
         return X, y.reshape(-1, 1)
 
-    # Undersample
-    X_bal = np.vstack([X_pos[:n_samples], X_neg[:n_samples]])
-    y_bal = np.hstack([np.ones(n_samples), np.zeros(n_samples)])
+    # Oversample spikes para lograr un 1:2 (50% spikes comparado con no-spikes)
+    n_samples = int(len(X_neg) * 0.5)
+    X_pos_upsampled, y_pos_upsampled = resample(X_pos, y_pos, replace=True, n_samples=n_samples, random_state=42)
+
+    X_bal = np.vstack((X_neg, X_pos_upsampled))
+    y_bal = np.hstack((y_neg, y_pos_upsampled))
 
     return X_bal, y_bal.reshape(-1, 1)
+
 
 def evaluate(y_true, y_pred):
     y_pred_bin = (y_pred >= 0.5).astype(int)

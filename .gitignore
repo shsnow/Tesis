@@ -1,2 +1,4 @@
 a
 a/*
+__pycache__/
+*.py[cod]

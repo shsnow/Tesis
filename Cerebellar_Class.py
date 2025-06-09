@@ -19,16 +19,16 @@ except ImportError:
     # Podrías querer que el script termine aquí si KAN es esencial.
     # exit() 
 
-# Configuración global
+# Configuración global (Nombres corregidos sin _LIB)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-BASE_MODEL_DIR_LIB = "models_cerebelo" # Donde se guardan/cargan modelos KAN y scalers
-BASE_DATA_DIR_LIB = "dataset_cerebelo"   # Donde se esperan los CSVs generados
+BASE_MODEL_DIR = "models_cerebelo" # Donde se guardan/cargan modelos KAN y scalers
+BASE_DATA_DIR = "dataset_cerebelo"   # Donde se esperan los CSVs generados
 
-os.makedirs(BASE_MODEL_DIR_LIB, exist_ok=True)
+os.makedirs(BASE_MODEL_DIR, exist_ok=True)
 
 # --- Clase Principal de la "Librería" ---
 class NeuronaCerebelarKAN:
-    def __init__(self, nombre_celula, ruta_base_datos=BASE_DATA_DIR_LIB, ruta_base_modelos=BASE_MODEL_DIR_LIB, columnas_features=None, columna_target="spike"):
+    def __init__(self, nombre_celula, ruta_base_datos=BASE_DATA_DIR, ruta_base_modelos=BASE_MODEL_DIR, columnas_features=None, columna_target="spike"):
         self.nombre_celula = nombre_celula
         self.columnas_features = columnas_features if columnas_features is not None else ["time_ms", "voltage_mV", "input_current_nA"]
         self.columna_target = columna_target
@@ -300,7 +300,7 @@ if __name__ == '__main__':
         "features": FEATURES_LIF
     }
     # Corregir el NameError usando la variable global correcta
-    ruta_datos_granule = os.path.join(BASE_DATA_DIR_LIB, config_granule["archivo"])
+    ruta_datos_granule = os.path.join(BASE_DATA_DIR, config_granule["archivo"])
 
     if os.path.exists(ruta_datos_granule):
         print(f"\n--- DEMO: Entrenando Célula Granular (LIF) ---")

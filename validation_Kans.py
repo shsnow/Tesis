@@ -5,11 +5,7 @@ import os
 from brian2 import *
 
 # Importar la clase y configuraciones de nuestra librería
-try:
-    from Cerebellar_Class import NeuronaCerebelarKAN, BASE_MODEL_DIR, BASE_DATA_DIR
-except ImportError:
-    # Adaptar para el nombre del archivo de la librería que te proporcioné anteriormente
-    from modelos_kan_cerebelo import NeuronaCerebelarKAN, BASE_MODEL_DIR, BASE_DATA_DIR
+from Cerebellar_Class import NeuronaCerebelarKAN, BASE_MODEL_DIR, BASE_DATA_DIR
 
 
 def validar_modelo_funcional(

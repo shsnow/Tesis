@@ -299,24 +299,19 @@ if __name__ == '__main__':
         "archivo": "granule_lif_light.csv", 
         "features": FEATURES_LIF
     }
-    # Corregir el NameError usando la variable global correcta
     ruta_datos_granule = os.path.join(BASE_DATA_DIR, config_granule["archivo"])
 
     if os.path.exists(ruta_datos_granule):
         print(f"\n--- DEMO: Entrenando Célula Granular (LIF) ---")
         granule_model = NeuronaCerebelarKAN(
             nombre_celula=config_granule["nombre"],
-            # Pasar la ruta completa al constructor de la clase
-            ruta_base_datos=os.path.dirname(ruta_datos_granule), # Pasar el directorio base
+            ruta_base_datos=os.path.dirname(ruta_datos_granule), 
             columnas_features=config_granule["features"]
         )
-        # El constructor ya forma self.ruta_datos_csv, pero para ser explícitos en la demo:
         granule_model.ruta_datos_csv = ruta_datos_granule 
 
-
-        # Para la demo, reducimos las épocas
         granule_model.configurar_entrenamiento_personalizado(epochs_per_phase=10) 
-        granule_model.entrenar_modelo(forzar_reentrenamiento=True) # Usar el método renombrado
+        granule_model.entrenar_modelo(forzar_reentrenamiento=True) 
 
         if granule_model.modelo_kan_cargado:
             print("\n--- DEMO: Realizando una predicción de prueba con el modelo de Granule ---")

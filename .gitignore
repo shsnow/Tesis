@@ -2,3 +2,12 @@ a
 a/*
 __pycache__/
 *.py[cod]
+dataset_cerebelo/granule_lif_kan_ready.csv
+figures
+dataset_cerebelo/granule_lif_kan_ready.csv
+dataset_cerebelo/golgi_lif_kan_ready.csv
+dataset_cerebelo/mossy_fiber_kan_ready.csv
+dataset_cerebelo/stellate_lif_kan_ready.csv
+dataset_cerebelo/basket_lif_kan_ready.csv
+dataset_cerebelo/climbing_fiber_kan_ready.csv
+dataset_cerebelo/deep_nuclei_lif_kan_ready.csv 

@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve, accuracy_score
 import matplotlib.pyplot as plt
 import os
+import joblib # 🌟 AÑADIDO: Para guardar el scaler
 
 # Asegúrate de que la biblioteca KAN (por ejemplo, pykan de KindXiaoming) esté instalada.
 # pip install pykan
@@ -25,7 +26,7 @@ KAN_K = 3
 KAN_SEED = 42
 
 NUM_PHASES = 3
-EPOCHS_PER_PHASE = 70 # Puedes reducir esto para pruebas más rápidas
+EPOCHS_PER_PHASE = 70 
 LEARNING_RATE_SCHEDULE = {0: 1e-3, 1: 5e-4, 2: 1e-4}
 MAX_GRAD_NORM = 1.0
 WEIGHT_DECAY = 1e-5
@@ -63,6 +64,12 @@ def train_and_evaluate_kan_for_cell(
 
     print(f"INFO: Usando características: {feature_columns} y objetivo: {target_column}")
     try:
+        # Asegurarse de que el nombre de la columna de corriente sea correcto
+        if "input_current_uA_cm2" in df.columns and "input_current_uA_cm2" in feature_columns:
+            print("   (Usando input_current_uA_cm2 para Purkinje)")
+        elif "input_current_nA" in df.columns and "input_current_nA" in feature_columns:
+            print("   (Usando input_current_nA para LIF)")
+        
         X_raw = df[feature_columns].values.astype(np.float32)
         y_raw = df[target_column].values.astype(np.float32)
     except KeyError as e:
@@ -71,9 +78,15 @@ def train_and_evaluate_kan_for_cell(
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X_raw)
+    
+    # 🌟 AÑADIDO: Guardar el scaler ajustado
+    scaler_path = os.path.join("models_cerebelo", f"scaler_{cell_name}.joblib")
+    joblib.dump(scaler, scaler_path)
+    print(f"   Scaler guardado en: {scaler_path}")
+
 
     X_train_np, X_test_np, y_train_np, y_test_np = train_test_split(
-        X_scaled, y_raw, test_size=0.2, stratify=y_raw, random_state=kan_seed # Usar kan_seed para reproducibilidad
+        X_scaled, y_raw, test_size=0.2, stratify=y_raw, random_state=kan_seed
     )
 
     X_train = torch.tensor(X_train_np, dtype=torch.float32).to(device)
@@ -92,7 +105,6 @@ def train_and_evaluate_kan_for_cell(
 
     # ✅ 2. Crear y configurar el modelo KAN (Nueva instancia para cada célula)
     print(f"INFO ({cell_name}): Creando modelo KAN...")
-    # Ajustar la primera capa de kan_width al número real de características
     current_kan_width = [X_train.shape[1]] + kan_width[1:]
     
     model = KAN(
@@ -125,7 +137,7 @@ def train_and_evaluate_kan_for_cell(
 
             if torch.isnan(loss):
                 print(f"❌ ERROR ({cell_name}, Fase {phase+1}, Epoch {epoch+1}): Loss es NaN. Deteniendo entrenamiento para esta célula.")
-                return # Terminar el entrenamiento para esta célula si la pérdida es NaN
+                return
 
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
@@ -166,7 +178,6 @@ def train_and_evaluate_kan_for_cell(
         print(f"❌ No se encontró un modelo guardado para {cell_name} en {best_model_cell_path}. Omitiendo evaluación.")
         return
 
-    # Cargar el mejor modelo para la célula actual
     final_model = KAN(width=current_kan_width, grid=kan_grid_size, k=kan_k, seed=kan_seed).to(device)
     try:
         final_model.load_state_dict(torch.load(best_model_cell_path, map_location=device))
@@ -196,7 +207,7 @@ def train_and_evaluate_kan_for_cell(
         final_auc = roc_auc_score(y_test_cpu, probs_cpu)
         final_acc = accuracy_score(y_test_cpu, preds_cpu)
         
-        print(f"\n🎉🎉🎉 RESULTADOS FINALES PARA {cell_name.upper()} 🎉🎉�")
+        print(f"\n🎉🎉🎉 RESULTADOS FINALES PARA {cell_name.upper()} 🎉🎉🎉")
         print(f"AUC Final: {final_auc:.4f}")
         print(f"Accuracy Final: {final_acc:.4f}")
 
@@ -223,13 +234,13 @@ def train_and_evaluate_kan_for_cell(
 
 # --- Lista de Células a Entrenar y sus Archivos de Datos ---
 # Asegúrate de que estas rutas y nombres de archivo coincidan con lo que generaste.
-# Usaremos los archivos '_light.csv' para un entrenamiento más rápido como ejemplo.
+# Se usan los archivos '_light.csv' para un entrenamiento más rápido como ejemplo.
 # Cambia a '_kan_ready.csv' para usar los datasets completos.
 CELL_DATA_CONFIG = [
     {
         "name": "purkinje_hh_dinamico", 
         "file": "dataset_cerebelo/purkinje_hh_dinamico_light.csv",
-        "features": ["time_ms", "voltage_mV", "input_current_uA_cm2"] # Purkinje usa uA/cm2 como en el script anterior
+        "features": ["time_ms", "voltage_mV", "input_current_uA_cm2"] # Purkinje usa uA/cm2
     },
     {"name": "granule_lif", "file": "dataset_cerebelo/granule_lif_light.csv", "features": FEATURE_COLUMNS_DEFAULT},
     {"name": "golgi_lif", "file": "dataset_cerebelo/golgi_lif_light.csv", "features": FEATURE_COLUMNS_DEFAULT},

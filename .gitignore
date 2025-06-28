@@ -11,3 +11,5 @@ dataset_cerebelo/stellate_lif_kan_ready.csv
 dataset_cerebelo/basket_lif_kan_ready.csv
 dataset_cerebelo/climbing_fiber_kan_ready.csv
 dataset_cerebelo/deep_nuclei_lif_kan_ready.csv 
+dataset_cerebelo/purkinje_hh_dinamico_kan_ready.csv 
+output

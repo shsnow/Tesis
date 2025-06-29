@@ -12,7 +12,7 @@ import numpy as np
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_auc_score, classification_report, roc_curve, accuracy_score
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, roc_curve,classification_report
 import matplotlib.pyplot as plt
 import json
 # Asegúrate de tener instalada la implementación de KAN (por ejemplo: pip install pykan)
@@ -131,8 +131,12 @@ def train_one_cell(csv_path):
         logits = final_model(X_test_t)
         probs  = torch.sigmoid(logits).cpu().numpy()
         preds  = (probs > 0.5).astype(int)
-        auc    = roc_auc_score(y_test, probs)
-        acc    = accuracy_score(y_test, preds)
+        logging.info(f"Predicciones para {cell_name} generadas")
+        auc   = roc_auc_score(y_test, probs)
+        acc   = accuracy_score(y_test, preds)
+        prec  = precision_score(y_test, preds, zero_division=0)
+        rec   = recall_score(y_test, preds, zero_division=0)
+        f1    = f1_score(y_test, preds, zero_division=0)
         logging.info(f"▶️ AUC final: {auc:.4f}, Accuracy: {acc:.4f}")
         print(classification_report(y_test, preds, digits=4, zero_division=0))
         
@@ -152,7 +156,10 @@ def train_one_cell(csv_path):
             "cell": cell_name,
             "auc": float(auc),
             "accuracy": float(acc),
-            "roc_curve": roc_path
+            "roc_curve": roc_path,
+            "precision": float(prec),
+            "recall": float(rec),
+            "f1_score": float(f1)
         })
         plt.close()
         logging.info(f"Curva ROC guardada en: {roc_path}")
